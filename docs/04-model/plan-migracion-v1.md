@@ -5,355 +5,270 @@
 La primera migración debe permitir representar el flujo crítico principal
 de EventHub:
 
-Organizador publica evento -> participante se inscribe -> se controla cupo
-y lista de espera -> se registra asistencia -> se habilita certificado.
+Organizador publica evento → participante se inscribe → se controla cupo
+y lista de espera → se registra asistencia → se habilita certificado
+según criterio.
 
-La migración V1 se limitará al núcleo necesario para representar este flujo.
+La migración V1 incluirá las tablas necesarias para representar el núcleo
+del flujo y la trazabilidad básica de las operaciones.
 
 Todavía no se ejecutará SQL durante la Clase 05.
 
+---
+
 ## 2. Tablas incluidas
 
-### Orden propuesto
+La V1 contempla las siguientes tablas:
 
-1. evento
-2. sede
-3. participante
-4. sala
-5. sesion_evento
-6. inscripcion
-7. lista_espera
-8. asistencia
-9. certificado
+1. usuario
+2. evento
+3. sede
+4. participante
+5. sala
+6. sesion_evento
+7. inscripcion
+8. lista_espera
+9. asistencia
+10. certificado
+11. comunicacion
+12. feedback
 
-## 3. Justificación del orden
+---
 
-### 1. evento
+## 3. Orden de creación
 
-No depende de otra tabla del núcleo.
+### 1. usuario
 
-### 2. sede
+No depende de otras tablas del modelo.
 
-No depende de otra tabla del núcleo.
+Se crea primero porque otras entidades utilizarán `usuario_id` para
+registrar quién realizó cambios relevantes.
 
-### 3. participante
+---
 
-No depende de otra tabla del núcleo.
+### 2. evento
 
-### 4. sala
+Depende de:
+
+- usuario
+
+FK:
+
+`evento.usuario_id -> usuario.usuario_id`
+
+Por eso se crea después de `usuario`.
+
+---
+
+### 3. sede
+
+No depende de otras tablas del núcleo.
+
+Puede crearse independientemente.
+
+---
+
+### 4. participante
+
+No depende de otras tablas del núcleo.
+
+Puede crearse independientemente.
+
+El atributo `correo` no tendrá UNIQUE en esta versión.
+
+---
+
+### 5. sala
 
 Depende de:
 
 - sede
 
-Por eso se crea después de sede.
+FK:
 
-### 5. sesion_evento
+`sala.sede_id -> sede.sede_id`
+
+Por eso se crea después de `sede`.
+
+---
+
+### 6. sesion_evento
 
 Depende de:
 
 - evento
 
-Por eso se crea después de evento.
+FK:
 
-### 6. inscripcion
+`sesion_evento.evento_id -> evento.evento_id`
 
-Depende de:
+Por eso se crea después de `evento`.
 
-- participante
-- evento
+---
 
-Por eso ambas tablas deben existir antes.
-
-### 7. lista_espera
-
-Depende de:
-
-- participante
-- evento
-
-Por eso ambas tablas deben existir antes.
-
-### 8. asistencia
-
-Depende de:
-
-- participante
-
-Su dependencia con evento/sesión queda pendiente de la decisión de RN-06.
-
-### 9. certificado
+### 7. inscripcion
 
 Depende de:
 
 - participante
 - evento
+- usuario
 
-Por eso se crea después de ambos.
+FK:
 
-## 4. Restricciones previstas
+`inscripcion.participante_id -> participante.participante_id`
 
-### PK
+`inscripcion.evento_id -> evento.evento_id`
 
-Cada tabla tendrá una PK técnica BIGINT:
+`inscripcion.usuario_id -> usuario.usuario_id`
 
-- evento.evento_id
-- sede.sede_id
-- participante.participante_id
-- sala.sala_id
-- sesion_evento.sesion_evento_id
-- inscripcion.inscripcion_id
-- lista_espera.lista_espera_id
-- asistencia.asistencia_id
-- certificado.certificado_id
+Por eso estas tablas deben existir antes.
 
-### FK
+Restricción:
 
-- sala.sede_id -> sede.sede_id
-- sesion_evento.evento_id -> evento.evento_id
-- inscripcion.participante_id -> participante.participante_id
-- inscripcion.evento_id -> evento.evento_id
-- lista_espera.participante_id -> participante.participante_id
-- lista_espera.evento_id -> evento.evento_id
-- asistencia.participante_id -> participante.participante_id
-- certificado.participante_id -> participante.participante_id
-- certificado.evento_id -> evento.evento_id
+`UNIQUE(participante_id, evento_id)`
 
-La FK definitiva de asistencia hacia evento/sesión queda pendiente.
+---
 
-## 5. NOT NULL
+### 8. lista_espera
 
-Se aplicará NOT NULL a:
-
-- PK;
-- FK obligatorias;
-- datos requeridos por RN-01;
-- fechas de operaciones;
-- estados;
-- capacidades;
-- atributos necesarios para identificar una relación válida.
-
-Los atributos opcionales podrán permanecer nullable.
-
-## 6. UNIQUE
-
-### Confirmada
-
-`inscripcion(participante_id, evento_id)`
-
-Justificación:
-
-RN-04 impide inscripción duplicada.
-
-### Candidatas
-
-- participante.correo
-- lista_espera(participante_id, evento_id)
-- certificado(participante_id, evento_id)
-
-Estas no se convierten todavía en restricciones definitivas hasta cerrar las
-reglas de negocio correspondientes.
-
-## 7. CHECK candidatos
-
-### Evento
-
-`capacidad > 0`
-
-### Sala
-
-`capacidad > 0`
-
-### Sesión
-
-`fecha_fin > fecha_inicio`
-
-### Lista de espera
-
-`posicion > 0`
-
-### Certificado
-
-`porcentaje_asistencia >= 0`
-`porcentaje_asistencia <= 100`
-
-### Estados
-
-Se utilizarán dominios controlados para evitar valores inválidos.
-
-## 8. Reglas que requerirán lógica posterior
-
-### RN-03
-
-Controlar el cupo requiere comparar las inscripciones con la capacidad.
-
-### RN-05
-
-Promover la lista de espera requiere seleccionar participantes según orden
-y disponibilidad.
-
-### RN-06
-
-Determinar si la asistencia corresponde a evento o sesión depende de la
-configuración.
-
-### RN-07
-
-Habilitar el certificado requiere comprobar el porcentaje de asistencia.
-
-### RF-04
-
-La trazabilidad de usuario y fecha requiere cerrar el modelo de identidad y
-auditoría.
-
-## 9. Fuera de V1
-
-Las siguientes tablas quedan fuera de la primera migración:
-
-- comunicacion
-- feedback
-
-No se eliminan del modelo definitivo.
-
-Se implementarán posteriormente cuando el núcleo transaccional esté estable.
-
-## 10. Decisiones pendientes antes del DDL
-
-### D-01 — Asistencia
-
-Definir si asistencia referencia:
-
-- evento;
-- sesión;
-- o ambos mediante una estructura común.
-
-Origen: RN-06.
-
-### D-02 — Auditoría
-
-Definir cómo se registra el usuario responsable de cambios de estado.
-
-Origen: RF-04.
-
-### D-03 — Estado de inscripción
-
-Cerrar el conjunto oficial de estados y sus transiciones.
-
-Origen: RF-08.
-
-### D-04 — Estado de lista de espera
-
-Cerrar los estados y transiciones de promoción.
-
-Origen: RN-05 y RF-19.
-
-### D-05 — Unicidad de certificado
-
-Definir si un participante puede tener como máximo un certificado por evento.
-
-Origen: RF-12 y RF-20.
-
-## 11. Prueba contra el flujo crítico
-
-### Paso 1 — Organizador publica evento
-
-Tabla principal:
-
-`evento`
-
-Datos necesarios:
-
-- nombre
-- responsable
-- modalidad
-- fechas
-- capacidad
-- estado
-
-Reglas:
-
-- RN-01
-- RN-02
-- RF-15
-
-### Paso 2 — Participante se inscribe
-
-Tablas:
+Depende de:
 
 - participante
 - evento
-- inscripcion
+- usuario
 
-La inscripción referencia al participante y al evento.
+FK:
 
-Reglas:
+`lista_espera.participante_id -> participante.participante_id`
 
-- RN-03
-- RN-04
-- RF-08
-- RF-16
-- RF-17
+`lista_espera.evento_id -> evento.evento_id`
 
-### Paso 3 — Se controla cupo/lista de espera
+`lista_espera.usuario_id -> usuario.usuario_id`
 
-Tablas:
+Restricción:
 
-- inscripcion
-- lista_espera
+`UNIQUE(participante_id, evento_id)`
+
+Esta restricción representa la decisión del grupo de que un participante
+no puede volver a ingresar a la lista de espera del mismo evento.
+
+---
+
+### 9. asistencia
+
+Depende de:
+
+- participante
+- sesion_evento
+- usuario
+
+FK:
+
+`asistencia.participante_id -> participante.participante_id`
+
+`asistencia.sesion_evento_id -> sesion_evento.sesion_evento_id`
+
+`asistencia.usuario_id -> usuario.usuario_id`
+
+Por eso se crea después de `participante`, `sesion_evento` y `usuario`.
+
+Restricción:
+
+`UNIQUE(participante_id, sesion_evento_id)`
+
+La asistencia se registra por sesión de evento.
+
+---
+
+### 10. certificado
+
+Depende de:
+
+- participante
+- evento
+- usuario
+
+FK:
+
+`certificado.participante_id -> participante.participante_id`
+
+`certificado.evento_id -> evento.evento_id`
+
+`certificado.usuario_id -> usuario.usuario_id`
+
+Restricción:
+
+`UNIQUE(participante_id, evento_id)`
+
+Un participante puede tener como máximo un certificado por evento.
+
+---
+
+### 11. comunicacion
+
+Depende de:
+
 - evento
 
-El sistema debe comparar el número de inscripciones con la capacidad.
+FK:
 
-Si corresponde, utiliza lista de espera.
+`comunicacion.evento_id -> evento.evento_id`
 
-Reglas:
+Por eso se crea después de `evento`.
 
-- RN-03
-- RN-05
-- RF-16
-- RF-19
+La definición de destinatarios individuales queda para una etapa posterior.
 
-### Paso 4 — Se registra asistencia
+---
 
-Tabla:
+### 12. feedback
 
-- asistencia
+Depende de:
 
-La referencia exacta a evento/sesión queda pendiente por RN-06.
-
-Reglas:
-
-- RN-06
-- RF-10
-- RF-18
-
-### Paso 5 — Se habilita certificado
-
-Tablas:
-
-- asistencia
-- certificado
 - participante
 - evento
 
-El certificado se habilita únicamente si se cumple el porcentaje mínimo.
+FK:
 
-Reglas:
+`feedback.participante_id -> participante.participante_id`
 
-- RN-07
-- RF-12
-- RF-20
+`feedback.evento_id -> evento.evento_id`
 
-## 12. Criterio de salida de V1
+Restricción:
 
-La migración V1 estará preparada para DDL cuando:
+`UNIQUE(participante_id, evento_id)`
 
-- las tablas tengan nombres físicos definitivos;
-- los tipos candidatos estén aprobados;
-- PK/FK estén cerradas;
-- UNIQUE necesarias estén confirmadas;
-- CHECK simples estén identificados;
-- nulabilidad esté justificada;
-- asistencia tenga una referencia definitiva;
-- auditoría tenga una estrategia definida;
-- el orden de creación no requiera nuevas decisiones importantes.
+Un participante puede registrar como máximo un feedback para un evento.
+
+---
+
+## 4. Resumen de dependencias
+
+```text
+USUARIO
+   │
+   ├───────────────┐
+   ↓               ↓
+ EVENTO        PARTICIPANTE
+   │               │
+   ↓               │
+SESION_EVENTO      │
+   │               │
+   └──────┐        │
+          ↓        ↓
+       ASISTENCIA
+
+EVENTO ──────────────┐
+  │                  │
+  ↓                  ↓
+INSCRIPCION      LISTA_ESPERA
+  │
+  │
+  └──────────────┐
+                 ↓
+             CERTIFICADO
+
+EVENTO ──────────→ COMUNICACION
+
+PARTICIPANTE ─────→ FEEDBACK
+EVENTO ────────────→ FEEDBACK

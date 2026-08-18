@@ -21,6 +21,8 @@ Organizador publica evento -> participante se inscribe -> sistema controla
 cupo/lista de espera -> se registra asistencia -> se habilita certificado
 según criterio.
 
+---
+
 ## 2. Estrategia de identificadores
 
 Se propone utilizar `BIGINT` autogenerado para las PK técnicas.
@@ -28,12 +30,45 @@ Se propone utilizar `BIGINT` autogenerado para las PK técnicas.
 Las PK técnicas identifican filas y no sustituyen las claves naturales o
 unicidades de negocio.
 
-## 3. EVENTO
+---
+
+## 3. USUARIO
 
 Propósito:
 
-Representa un evento académico que puede ser publicado y utilizado para
-gestionar inscripciones, asistencia y certificado.
+Representa la identidad que realiza operaciones dentro del sistema y permite
+registrar quién ejecutó cambios relevantes.
+
+| Columna    | Tipo candidato | NULL | Rol/Restricción | Fuente |
+|------------|----------------|------|-----------------|--------|
+| usuario_id | BIGINT         | NO   | PK              | Diseño |
+| nombre     | VARCHAR(100)   | NO   | NN              | RF-04  |
+| apellido   | VARCHAR(100)   | NO   | NN              | RF-04  |
+| correo     | VARCHAR(254)   | NO   | NN              | RF-04  |
+| rol         | VARCHAR(50)    | NO   | NN              | RF-04  |
+| created_at | TIMESTAMPTZ    | NO   | Auditoría       | RF-04  |
+| updated_at | TIMESTAMPTZ    | NO   | Auditoría       | RF-04  |
+
+### Decisiones
+
+`usuario_id` es la PK técnica.
+
+El atributo `rol` permite diferenciar los tipos de usuario necesarios para
+la operación del sistema.
+
+El correo de usuario no se establece como UNIQUE en esta versión porque el
+grupo decidió que un mismo correo puede pertenecer a más de un participante.
+La política definitiva de identidad/autenticación podrá refinarse
+posteriormente.
+
+---
+
+## 4. EVENTO
+
+Propósito:
+
+Representa un evento que puede ser publicado y utilizado para gestionar
+inscripciones, asistencia y certificado.
 
 | Columna      | Tipo candidato | NULL | Rol/Restricción     | Fuente       |
 |--------------|----------------|------|---------------------|--------------|
@@ -46,8 +81,17 @@ gestionar inscripciones, asistencia y certificado.
 | fecha_fin    | TIMESTAMPTZ    | NO   | NN                  | RN-01        |
 | capacidad    | INTEGER        | NO   | NN, CHECK > 0       | RN-01, RN-03 |
 | estado       | VARCHAR(20)    | NO   | NN, CHECK/dominio   | RN-02        |
-| created_at   | TIMESTAMPTZ    | NO   | Auditoría candidata | RF-04        |
-| updated_at   | TIMESTAMPTZ    | NO   | Auditoría candidata | RF-04        |
+| usuario_id   | BIGINT         | NO   | FK -> usuario.usuario_id | RF-04 |
+| created_at   | TIMESTAMPTZ    | NO   | Auditoría           | RF-04        |
+| updated_at   | TIMESTAMPTZ    | NO   | Auditoría           | RF-04        |
+
+### Estados válidos
+
+- BORRADOR
+- PUBLICADO
+- EN_CURSO
+- FINALIZADO
+- CANCELADO
 
 ### Decisiones
 
@@ -58,6 +102,9 @@ no tenga una descripción extensa.
 
 `estado` utiliza un conjunto cerrado de valores.
 
+`usuario_id` identifica al usuario responsable del último cambio relevante
+registrado sobre el evento.
+
 ### Regla que no se resuelve sólo con constraint simple
 
 RN-03 requiere controlar el número de inscripciones frente a la capacidad
@@ -67,20 +114,20 @@ Esto requiere lógica entre múltiples filas.
 
 ---
 
-## 4. SESION_EVENTO
+## 5. SESION_EVENTO
 
 Propósito:
 
 Representa una sesión concreta perteneciente a un evento.
 
-| Columna          | Tipo candidato | NULL | Rol/Restricción        | Fuente |
-|------------------|----------------|------|------------------------|--------|
-| sesion_evento_id | BIGINT         | NO   | PK                     | Diseño |
-| evento_id        | BIGINT         | NO   | FK -> evento.evento_id | RF-06  |
-| fecha_inicio     | TIMESTAMPTZ    | NO   | NN                     | RF-06  |
-| fecha_fin        | TIMESTAMPTZ    | NO   | NN, CHECK fin > inicio | RF-06  |
-| created_at       | TIMESTAMPTZ    | NO   | Auditoría candidata    | RF-04  |
-| updated_at       | TIMESTAMPTZ    | NO   | Auditoría candidata    | RF-04  |
+| Columna          | Tipo candidato | NULL | Rol/Restricción             | Fuente |
+|------------------|----------------|------|-----------------------------|--------|
+| sesion_evento_id | BIGINT         | NO   | PK                          | Diseño |
+| evento_id        | BIGINT         | NO   | FK -> evento.evento_id      | RF-06  |
+| fecha_inicio     | TIMESTAMPTZ    | NO   | NN                          | RF-06  |
+| fecha_fin        | TIMESTAMPTZ    | NO   | NN, CHECK fin > inicio      | RF-06  |
+| created_at       | TIMESTAMPTZ    | NO   | Auditoría candidata         | RF-04  |
+| updated_at       | TIMESTAMPTZ    | NO   | Auditoría candidata         | RF-04  |
 
 ### Decisiones
 
@@ -89,14 +136,12 @@ finalización de la sesión.
 
 `evento_id` es obligatorio porque una sesión no tiene sentido sin un evento.
 
-### Regla que no se resuelve sólo con constraint simple
-
-Las transiciones de estado o reglas de solapamiento que eventualmente se
-definan requieren lógica adicional.
+La asistencia se relaciona con esta tabla mediante
+`asistencia.sesion_evento_id`.
 
 ---
 
-## 5. SEDE
+## 6. SEDE
 
 Propósito:
 
@@ -117,7 +162,7 @@ geolocalización ni descomposición de dirección.
 
 ---
 
-## 6. SALA
+## 7. SALA
 
 Propósito:
 
@@ -140,33 +185,33 @@ Representa un espacio físico perteneciente a una sede.
 
 ---
 
-## 7. PARTICIPANTE
+## 8. PARTICIPANTE
 
 Propósito:
 
 Representa al usuario externo o beneficiario que consulta eventos y realiza
-acciones de autoservicio autorizadas.
+acciones de participación.
 
-| Columna         | Tipo candidato | NULL | Rol/Restricción     | Fuente       |
-|-----------------|----------------|------|---------------------|--------------|
-| participante_id | BIGINT         | NO   | PK                  | Diseño       |
-| nombre          | VARCHAR(100)   | NO   | NN                  | RF-08        |
-| apellido        | VARCHAR(100)   | NO   | NN                  | RF-08        |
-| correo          | VARCHAR(254)   | NO   | NN, UQ candidata    | RF-01, RF-08 |
-| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata | RF-04        |
-| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata | RF-04        |
+| Columna         | Tipo candidato | NULL | Rol/Restricción | Fuente       |
+|-----------------|----------------|------|-----------------|--------------|
+| participante_id | BIGINT         | NO   | PK              | Diseño       |
+| nombre          | VARCHAR(100)   | NO   | NN              | RF-08        |
+| apellido        | VARCHAR(100)   | NO   | NN              | RF-08        |
+| correo          | VARCHAR(254)   | NO   | NN              | RF-01, RF-08 |
+| created_at      | TIMESTAMPTZ    | NO   | Auditoría       | RF-04        |
+| updated_at      | TIMESTAMPTZ    | NO   | Auditoría       | RF-04        |
 
 ### Decisiones
 
-`correo` se considera candidato a UNIQUE porque puede utilizarse para
-identificar una cuenta, pero la unicidad definitiva debe confirmarse con el
-modelo de autenticación.
+`correo` NO es UNIQUE.
 
-No se convierte en PK porque es un dato de negocio que puede cambiar.
+El modelo permite que un mismo correo pertenezca a más de un participante.
+
+No se utiliza como PK porque es un dato de negocio.
 
 ---
 
-## 8. INSCRIPCION
+## 9. INSCRIPCION
 
 Propósito:
 
@@ -179,21 +224,27 @@ Representa la inscripción de un participante a un evento.
 | evento_id         | BIGINT         | NO   | FK -> evento.evento_id             | RF-08  |
 | fecha_inscripcion | TIMESTAMPTZ    | NO   | NN                                 | RF-08  |
 | estado            | VARCHAR(30)    | NO   | NN, dominio controlado             | RF-08  |
-| created_at        | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
-| updated_at        | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
+| usuario_id        | BIGINT         | NO   | FK -> usuario.usuario_id           | RF-04  |
+| created_at        | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
+| updated_at        | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
 
-### Restricción principal
+### Restricción
 
-UNIQUE(participante_id, evento_id)
+`UNIQUE(participante_id, evento_id)`
+
+### Estados válidos
+
+- PENDIENTE
+- CONFIRMADA
+- CANCELADA
 
 ### Decisión
-
-La unicidad es contextual.
 
 Un participante puede inscribirse en muchos eventos, pero no puede tener dos
 inscripciones para el mismo evento.
 
-Esto implementa RN-04 y RF-17.
+`usuario_id` identifica al usuario que realizó el último cambio relevante de
+estado.
 
 ### Regla que no se resuelve sólo con constraint simple
 
@@ -206,7 +257,7 @@ Esto requiere comparar múltiples inscripciones con la capacidad del evento.
 
 ---
 
-## 9. LISTA_ESPERA
+## 10. LISTA_ESPERA
 
 Propósito:
 
@@ -220,15 +271,30 @@ Representa a un participante que espera disponibilidad para un evento.
 | fecha_ingreso   | TIMESTAMPTZ    | NO   | NN                                 | RN-05  |
 | posicion        | INTEGER        | NO   | NN, CHECK > 0                      | RN-05  |
 | estado          | VARCHAR(30)    | NO   | NN, dominio controlado             | RN-05  |
-| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
-| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
+| usuario_id      | BIGINT         | NO   | FK -> usuario.usuario_id           | RF-04  |
+| created_at      | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
+| updated_at      | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
+
+### Restricción
+
+`UNIQUE(participante_id, evento_id)`
+
+### Estados válidos
+
+- ACTIVA
+- PROMOVIDA
+- CANCELADA
 
 ### Decisiones
 
-`posicion` es un entero positivo porque representa el orden dentro de la lista.
+`posicion` es un entero positivo porque representa el orden dentro de la
+lista.
 
-No se fija todavía UNIQUE(participante_id, evento_id) porque falta cerrar si un
-participante puede volver a entrar a la lista del mismo evento.
+No se permite que un participante vuelva a ingresar a la lista de espera
+del mismo evento.
+
+`usuario_id` identifica al usuario que realizó el último cambio relevante
+de estado.
 
 ### Regla que no se resuelve sólo con constraint simple
 
@@ -240,42 +306,51 @@ La selección del siguiente participante requiere lógica transaccional.
 
 ---
 
-## 10. ASISTENCIA
+## 11. ASISTENCIA
 
 Propósito:
 
-Representa el registro de asistencia de un participante.
+Representa el registro de asistencia de un participante a una sesión
+específica de un evento.
 
-| Columna         | Tipo candidato | NULL | Rol/Restricción                    | Fuente |
-|-----------------|----------------|------|------------------------------------|--------|
-| asistencia_id   | BIGINT         | NO   | PK                                 | Diseño |
-| participante_id | BIGINT         | NO   | FK -> participante.participante_id | RF-10  |
-| fecha_registro  | TIMESTAMPTZ    | NO   | NN                                 | RF-18  |
-| estado          | VARCHAR(30)    | NO   | NN, dominio controlado             | RF-10  |
-| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
-| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
+| Columna          | Tipo candidato | NULL | Rol/Restricción                       | Fuente       |
+|------------------|----------------|------|---------------------------------------|--------------|
+| asistencia_id    | BIGINT         | NO   | PK                                    | Diseño       |
+| participante_id  | BIGINT         | NO   | FK -> participante.participante_id    | RF-10        |
+| sesion_evento_id | BIGINT         | NO   | FK -> sesion_evento.sesion_evento_id  | RN-06, RF-10 |
+| fecha_registro   | TIMESTAMPTZ    | NO   | NN                                    | RF-18        |
+| estado           | VARCHAR(30)    | NO   | NN, dominio controlado                | RF-10        |
+| usuario_id       | BIGINT         | NO   | FK -> usuario.usuario_id              | RF-04        |
+| created_at       | TIMESTAMPTZ    | NO   | Auditoría                             | RF-04        |
+| updated_at       | TIMESTAMPTZ    | NO   | Auditoría                             | RF-04        |
 
-### Decisión pendiente importante
+### Restricción
 
-RN-06 indica que la asistencia se registra por sesión o por evento según
-configuración.
+`UNIQUE(participante_id, sesion_evento_id)`
 
-Por lo tanto, todavía debe decidirse si la asistencia tendrá:
+Esta restricción evita registrar dos veces la asistencia del mismo participante
+para una misma sesión.
 
-- evento_id;
-- sesion_evento_id;
-- o una estructura que soporte ambos escenarios.
+### Estados válidos
 
-No se inventa una FK definitiva mientras esa decisión siga abierta.
+- PRESENTE
+- AUSENTE
 
-### Regla que no se resuelve sólo con constraint simple
+### Decisión
 
-El criterio de asistencia depende del contexto del evento/sesión y puede
-participar posteriormente en el cálculo del certificado.
+La asistencia se registra por `SESION_EVENTO`.
+
+Por lo tanto, `sesion_evento_id` es obligatorio y funciona como FK hacia
+`sesion_evento.sesion_evento_id`.
+
+La asistencia registrada por sesión permite calcular posteriormente el
+porcentaje de asistencia utilizado para habilitar certificados.
+
+`usuario_id` identifica al usuario que registró o modificó la asistencia.
 
 ---
 
-## 11. CERTIFICADO
+## 12. CERTIFICADO
 
 Propósito:
 
@@ -290,14 +365,29 @@ que cumple el criterio de asistencia.
 | fecha_emision         | TIMESTAMPTZ    | NO   | NN                                 | RF-12  |
 | porcentaje_asistencia | NUMERIC(5,2)   | NO   | CHECK 0..100                       | RN-07  |
 | estado                | VARCHAR(30)    | NO   | NN, dominio controlado             | RF-12  |
-| created_at            | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
-| updated_at            | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
+| usuario_id            | BIGINT         | NO   | FK -> usuario.usuario_id           | RF-04  |
+| created_at             | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
+| updated_at             | TIMESTAMPTZ    | NO   | Auditoría                          | RF-04  |
 
-### Decisión pendiente
+### Restricción
 
-Debe confirmarse si sólo puede existir un certificado por participante/evento.
+`UNIQUE(participante_id, evento_id)`
 
-Mientras no se confirme, no se fija UNIQUE(participante_id, evento_id).
+### Estados válidos
+
+- HABILITADO
+- EMITIDO
+- ANULADO
+
+### Decisión
+
+Sólo puede existir un certificado por participante y evento.
+
+El certificado sólo se habilita cuando se cumple el porcentaje mínimo de
+asistencia.
+
+`usuario_id` identifica al usuario que realizó el último cambio relevante
+del certificado.
 
 ### Regla que no se resuelve sólo con constraint simple
 
@@ -306,11 +396,11 @@ RN-07:
 El certificado sólo se habilita cuando se cumple el porcentaje mínimo de
 asistencia.
 
-Esto depende de información relacionada con la asistencia.
+Esto depende de información relacionada con las asistencias registradas.
 
 ---
 
-## 12. COMUNICACION
+## 13. COMUNICACION
 
 Propósito:
 
@@ -324,17 +414,19 @@ Representa una comunicación relacionada con un evento.
 | contenido       | TEXT           | NO   | NN                     | RF-11  |
 | fecha_envio     | TIMESTAMPTZ    | NO   | NN                     | RF-11  |
 | estado          | VARCHAR(30)    | NO   | NN, dominio controlado | RF-11  |
-| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata    | RF-04  |
-| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata    | RF-04  |
+| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata   | RF-04  |
+| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata   | RF-04  |
 
 ### Decisión pendiente
 
 Debe definirse si la comunicación se dirige a todos los participantes de un
 evento o si necesita destinatarios individuales.
 
+Esta decisión no bloquea el núcleo de Clase 05.
+
 ---
 
-## 13. FEEDBACK
+## 14. FEEDBACK
 
 Propósito:
 
@@ -348,17 +440,45 @@ Representa la valoración o comentario de un participante sobre un evento.
 | valoracion      | INTEGER        | NO   | CHECK según escala definida        | RF-13  |
 | comentario      | TEXT           | SÍ   | —                                  | RF-13  |
 | fecha           | TIMESTAMPTZ    | NO   | NN                                 | RF-13  |
-| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
-| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata                | RF-04  |
+| created_at      | TIMESTAMPTZ    | NO   | Auditoría candidata               | RF-04  |
+| updated_at      | TIMESTAMPTZ    | NO   | Auditoría candidata               | RF-04  |
 
-### Decisión pendiente
+### Restricción
 
-Debe confirmarse la escala de valoración y si un participante puede registrar
-más de un feedback para el mismo evento.
+`UNIQUE(participante_id, evento_id)`
+
+Un participante puede registrar como máximo un feedback para un evento.
+
+La escala exacta de valoración queda pendiente de definición.
 
 ---
 
-## 14. Reglas transaccionales identificadas
+## 15. Relaciones FK
+
+Las FK principales son:
+
+- `evento.usuario_id -> usuario.usuario_id`
+- `sesion_evento.evento_id -> evento.evento_id`
+- `sala.sede_id -> sede.sede_id`
+- `inscripcion.participante_id -> participante.participante_id`
+- `inscripcion.evento_id -> evento.evento_id`
+- `inscripcion.usuario_id -> usuario.usuario_id`
+- `lista_espera.participante_id -> participante.participante_id`
+- `lista_espera.evento_id -> evento.evento_id`
+- `lista_espera.usuario_id -> usuario.usuario_id`
+- `asistencia.participante_id -> participante.participante_id`
+- `asistencia.sesion_evento_id -> sesion_evento.sesion_evento_id`
+- `asistencia.usuario_id -> usuario.usuario_id`
+- `certificado.participante_id -> participante.participante_id`
+- `certificado.evento_id -> evento.evento_id`
+- `certificado.usuario_id -> usuario.usuario_id`
+- `comunicacion.evento_id -> evento.evento_id`
+- `feedback.participante_id -> participante.participante_id`
+- `feedback.evento_id -> evento.evento_id`
+
+---
+
+## 16. Reglas transaccionales identificadas
 
 Las siguientes reglas no se reducen a un CHECK simple:
 
@@ -372,7 +492,13 @@ Debe seleccionar participantes de manera ordenada y trazable.
 
 ### RN-06 — Registro de asistencia
 
-La estructura depende de si el control es por evento o sesión.
+La asistencia se registra por sesión de evento.
+
+La relación se implementa mediante `sesion_evento_id`, que referencia a
+`sesion_evento.sesion_evento_id`.
+
+La asistencia registrada por sesión también sirve como base para calcular el
+porcentaje de asistencia utilizado posteriormente en el certificado.
 
 ### RN-07 — Certificado
 
@@ -382,30 +508,99 @@ Debe verificar el porcentaje mínimo de asistencia antes de habilitarlo.
 
 Las operaciones de cambio de estado requieren conservar fecha y usuario.
 
-La estructura definitiva de identidad/auditoría queda pendiente.
+La fecha se conserva mediante los campos de auditoría y el usuario mediante
+`usuario_id`.
 
-## 15. Brechas identificadas
+---
 
-### Auditoría de usuario
+## 17. Restricciones de dominio
 
-RF-04 exige registrar fecha y usuario en operaciones que cambian estados.
+### EVENTO.estado
 
-El modelo actual contiene timestamps candidatos, pero todavía no existe una
-entidad de identidad/auditoría definida en el núcleo del modelo.
+Valores permitidos:
 
-Debe resolverse antes de la implementación definitiva.
+- BORRADOR
+- PUBLICADO
+- EN_CURSO
+- FINALIZADO
+- CANCELADO
 
-### Asistencia
+### INSCRIPCION.estado
 
-Debe definirse la referencia a evento o sesión.
+Valores permitidos:
 
-### Estados
+- PENDIENTE
+- CONFIRMADA
+- CANCELADA
 
-Los conjuntos exactos de estados de inscripción, lista de espera,
-asistencia, certificado, comunicación y feedback deben cerrarse antes del DDL
-definitivo.
+### LISTA_ESPERA.estado
 
-## 16. Fuera de alcance físico
+Valores permitidos:
+
+- ACTIVA
+- PROMOVIDA
+- CANCELADA
+
+### ASISTENCIA.estado
+
+Valores permitidos:
+
+- PRESENTE
+- AUSENTE
+
+### CERTIFICADO.estado
+
+Valores permitidos:
+
+- HABILITADO
+- EMITIDO
+- ANULADO
+
+### EVENTO.capacidad
+
+Debe ser mayor que cero.
+
+### SALA.capacidad
+
+Debe ser mayor que cero.
+
+### LISTA_ESPERA.posicion
+
+Debe ser mayor que cero.
+
+### CERTIFICADO.porcentaje_asistencia
+
+Debe estar entre 0 y 100.
+
+### Fechas
+
+Cuando se comparan fecha/hora de inicio y finalización:
+
+`fecha_fin >= fecha_inicio`
+
+La implementación física definitiva de estas restricciones queda para la
+etapa de PostgreSQL.
+
+---
+
+## 18. Auditoría
+
+Las entidades que requieren trazabilidad de cambios de estado utilizan:
+
+- `created_at`
+- `updated_at`
+- `usuario_id`
+
+`usuario_id` referencia a `usuario.usuario_id`.
+
+La solución registra quién realizó el último cambio relevante.
+
+Un historial completo de todas las transiciones podrá implementarse
+posteriormente si el proyecto requiere auditoría histórica detallada.
+
+---
+
+## 19. Fuera de alcance físico
 
 RN-08 establece que:
 
@@ -414,7 +609,9 @@ RN-08 establece que:
 
 Por lo tanto, no se agregan tablas de pagos ni mecanismos de facturación.
 
-## 17. Criterio de salida
+---
+
+## 20. Criterio de salida
 
 Este modelo físico se considera preparado para la siguiente etapa cuando:
 

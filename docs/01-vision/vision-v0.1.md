@@ -1,304 +1,121 @@
-# Backlog v0.1 — EventHub
+# Visión del Producto — EventHub v0.1
 
-## 1. Propósito
+## 1. Nombre del producto
 
-Este backlog organiza las funcionalidades iniciales de EventHub y mantiene su
-trazabilidad con los requisitos funcionales y reglas de negocio oficiales del
-proyecto PA-10.
+**EventHub**
 
-## 2. Historias de usuario
+Plataforma para la gestión y promoción de eventos de entretenimiento,
+principalmente fiestas, eventos nocturnos y actividades relacionadas.
 
-### HU-01 — Autenticación y permisos
+## 2. Problema
 
-**Como** usuario del sistema,
-**quiero** iniciar sesión y acceder según mi rol,
-**para** utilizar únicamente las funcionalidades autorizadas.
+La información sobre eventos de entretenimiento suele encontrarse
+dispersa entre redes sociales, mensajes, publicaciones y diferentes
+medios de venta.
 
-**Prioridad:** Alta
+Esto puede dificultar que las personas encuentren información clara
+sobre los eventos, conozcan su disponibilidad, adquieran entradas o
+realicen reservas.
 
-**Trazabilidad:** RF-01
+Para los organizadores y responsables de eventos también puede resultar
+difícil centralizar la información, controlar las entradas, administrar
+reservas y consultar el movimiento de sus eventos.
 
----
+## 3. Oportunidad
 
-### HU-02 — Gestionar eventos
+EventHub busca centralizar la información y las operaciones principales
+relacionadas con eventos de entretenimiento en una sola plataforma.
 
-**Como** organizador,
-**quiero** crear, consultar y actualizar eventos,
-**para** administrar las actividades disponibles en EventHub.
+La propuesta es facilitar la conexión entre:
 
-**Prioridad:** Alta
+- personas interesadas en asistir a eventos;
+- organizadores;
+- locales;
+- vendedores o revendedores autorizados.
 
-**Trazabilidad:** RF-05
+El sistema permitirá gestionar la información del evento y apoyar el
+flujo de compra, reserva y control de acceso.
 
-**Reglas relacionadas:** RN-01, RN-02
+## 4. Objetivo del producto
 
----
+Construir un MVP que permita gestionar eventos de entretenimiento y
+centralizar las operaciones principales relacionadas con ellos.
 
-### HU-03 — Publicar evento
+El sistema deberá permitir:
 
-**Como** organizador,
-**quiero** publicar un evento válido,
-**para** permitir que los participantes puedan consultarlo e inscribirse.
+- publicar y consultar eventos;
+- administrar información de eventos y locales;
+- gestionar entradas;
+- registrar compras;
+- administrar reservas de mesas;
+- gestionar productos asociados a eventos;
+- registrar pedidos;
+- gestionar revendedores y sus ventas.
 
-**Prioridad:** Alta
+## 5. Usuarios principales
 
-**Trazabilidad:** RF-15
+### Cliente
 
-**Reglas relacionadas:** RN-01, RN-02
+Persona que consulta eventos y puede adquirir entradas, realizar
+reservas y utilizar los servicios disponibles durante un evento.
 
----
+### Organizador
 
-### HU-04 — Gestionar sesiones
+Persona responsable de crear y administrar eventos.
 
-**Como** organizador o facilitador,
-**quiero** gestionar las sesiones de un evento,
-**para** organizar las actividades que forman parte del evento.
+### Administrador
 
-**Prioridad:** Alta
+Usuario encargado de gestionar la plataforma y supervisar la información
+y operaciones generales.
 
-**Trazabilidad:** RF-06
+### Revendedor
 
----
+Persona autorizada para comercializar entradas de determinados eventos.
 
-### HU-05 — Gestionar sedes y salas
+## 6. Alcance inicial
 
-**Como** organizador,
-**quiero** administrar sedes y salas,
-**para** definir los espacios donde se desarrollan las actividades.
+El MVP contempla:
 
-**Prioridad:** Alta
+- gestión de usuarios y roles;
+- gestión de eventos;
+- gestión de locales;
+- gestión de entradas;
+- compra y control de entradas;
+- reservas de mesas;
+- gestión de productos;
+- registro de pedidos;
+- gestión de revendedores;
+- registro de ventas de entradas;
+- consulta básica de información de eventos y ventas.
 
-**Trazabilidad:** RF-07
+## 7. Fuera de alcance
 
----
+En esta primera versión no se contempla:
 
-### HU-06 — Gestionar participantes
-
-**Como** administrador u organizador,
-**quiero** consultar y gestionar participantes,
-**para** mantener la información necesaria para las inscripciones y asistencia.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-08
-
----
-
-### HU-07 — Inscribirse a un evento
-
-**Como** participante,
-**quiero** inscribirme a un evento,
-**para** confirmar mi participación.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-08, RF-17
-
-**Reglas relacionadas:** RN-03, RN-04
-
----
-
-### HU-08 — Controlar cupos
-
-**Como** sistema,
-**quiero** validar la disponibilidad de cupos antes de aceptar una inscripción,
-**para** evitar superar la capacidad del evento.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-16
-
-**Reglas relacionadas:** RN-03
-
----
-
-### HU-09 — Gestionar lista de espera
-
-**Como** participante,
-**quiero** ingresar a una lista de espera cuando un evento está lleno,
-**para** tener la posibilidad de acceder si se libera un cupo.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-09, RF-16
-
-**Reglas relacionadas:** RN-03
-
----
-
-### HU-10 — Evitar inscripciones duplicadas
-
-**Como** sistema,
-**quiero** impedir que un participante se inscriba más de una vez al mismo evento,
-**para** mantener la información consistente.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-17
-
-**Reglas relacionadas:** RN-04
-
----
-
-### HU-11 — Promover lista de espera
-
-**Como** organizador,
-**quiero** promover participantes desde la lista de espera cuando exista disponibilidad,
-**para** mantener el orden y la trazabilidad de la asignación de cupos.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-19
-
-**Reglas relacionadas:** RN-05
-
----
-
-### HU-12 — Registrar asistencia
-
-**Como** facilitador,
-**quiero** registrar la asistencia de los participantes,
-**para** mantener evidencia de su participación.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-10, RF-18
-
-**Reglas relacionadas:** RN-06
-
----
-
-### HU-13 — Gestionar comunicaciones
-
-**Como** organizador,
-**quiero** enviar comunicaciones relacionadas con un evento,
-**para** informar a los participantes sobre novedades o información importante.
-
-**Prioridad:** Media
-
-**Trazabilidad:** RF-11
-
----
-
-### HU-14 — Habilitar certificado
-
-**Como** sistema,
-**quiero** verificar el porcentaje de asistencia antes de habilitar un certificado,
-**para** evitar certificados que no cumplan el criterio establecido.
-
-**Prioridad:** Media
-
-**Trazabilidad:** RF-12, RF-20
-
-**Reglas relacionadas:** RN-07
-
----
-
-### HU-15 — Registrar feedback
-
-**Como** participante,
-**quiero** proporcionar feedback sobre un evento,
-**para** expresar mi valoración y opinión sobre la experiencia.
-
-**Prioridad:** Media
-
-**Trazabilidad:** RF-13
-
----
-
-### HU-16 — Consultar reportes
-
-**Como** administrador u organizador,
-**quiero** consultar indicadores de eventos, inscripciones y asistencia,
-**para** analizar la operación de la plataforma.
-
-**Prioridad:** Media
-
-**Trazabilidad:** RF-14
-
----
-
-### HU-17 — Validar datos
-
-**Como** sistema,
-**quiero** validar los datos obligatorios tanto en cliente como en servidor,
-**para** evitar información inválida.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-03
-
----
-
-### HU-18 — Registrar trazabilidad
-
-**Como** sistema,
-**quiero** registrar fecha y usuario en las operaciones que cambian estados,
-**para** mantener trazabilidad de los procesos.
-
-**Prioridad:** Alta
-
-**Trazabilidad:** RF-04
-
-## 3. Flujo crítico del MVP
-
-El flujo prioritario del proyecto es:
-
-1. Organizador publica evento.
-2. Participante consulta el evento.
-3. Participante se inscribe.
-4. Sistema verifica el cupo.
-5. Si existe disponibilidad, confirma la inscripción.
-6. Si no existe disponibilidad y la lista está habilitada, registra al participante
-   en lista de espera.
-7. Cuando corresponde, el sistema permite la promoción desde la lista de espera.
-8. Facilitador registra asistencia.
-9. El sistema verifica el criterio de asistencia.
-10. El sistema habilita el certificado cuando corresponde.
-
-## 4. Priorización inicial
-
-### Alta
-
-* Autenticación y permisos.
-* Gestión de eventos.
-* Publicación de eventos.
-* Gestión de sesiones.
-* Gestión de sedes y salas.
-* Inscripciones.
-* Control de cupos.
-* Lista de espera.
-* Evitar duplicados.
-* Registro de asistencia.
-* Validaciones.
-* Trazabilidad.
-
-### Media
-
-* Comunicaciones.
-* Certificados.
-* Feedback.
-* Reportes.
-
-## 5. Criterio de aceptación general
-
-Una funcionalidad se considera lista cuando:
-
-* cumple el requisito funcional asociado;
-* respeta las reglas de negocio correspondientes;
-* valida los datos necesarios;
-* mantiene la información persistida cuando corresponde;
-* presenta resultados y errores de forma comprensible;
-* cuenta con evidencia o prueba cuando la funcionalidad contiene lógica relevante;
-* mantiene actualizada la documentación afectada.
-
-## 6. Reglas de negocio asociadas
-
-* RN-01: información obligatoria del evento.
-* RN-02: estados válidos del evento.
-* RN-03: control de cupos y lista de espera.
-* RN-04: evitar inscripciones duplicadas.
-* RN-05: promoción ordenada y trazable.
-* RN-06: registro de asistencia.
-* RN-07: criterio para habilitar certificados.
-* RN-08: pagos reales y emisión legal de certificados fuera del alcance.
+- integración con sistemas bancarios reales;
+- facturación fiscal;
+- control mediante cámaras;
+- reconocimiento facial;
+- sistemas físicos de acceso;
+- geolocalización en tiempo real;
+- inteligencia artificial para determinar precios;
+- integración automática con redes sociales.
+
+## 8. Flujo principal del producto
+
+El flujo principal esperado para el MVP es:
+
+```text
+Organizador
+    ↓
+Publica / administra evento
+    ↓
+Cliente consulta evento
+    ↓
+Compra entrada o reserva mesa
+    ↓
+Sistema registra la operación
+    ↓
+Evento
+    ↓
+Control de acceso / utilización de servicios

@@ -683,20 +683,24 @@ debe quedar registrado en la lista de espera.
 
 ### Paso 4 — Se registra asistencia
 
-**Entidades involucradas:**
+Tabla:
 
-* Participante
-* Evento
-* SesionEvento
-* Asistencia
+- asistencia
 
-**Relaciones y reglas:**
+La asistencia se registra específicamente para una `sesion_evento`.
 
-* RN-06
-* RF-10
-* RF-18
+La tabla referencia:
 
-La asistencia se registra a nivel de evento o sesión según la configuración.
+- participante
+- sesion_evento
+
+La combinación participante/sesión debe ser única.
+
+Reglas:
+
+- RN-06
+- RF-10
+- RF-18
 
 ### Paso 5 — Se habilita el certificado
 

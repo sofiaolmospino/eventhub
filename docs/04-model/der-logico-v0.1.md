@@ -92,16 +92,16 @@ pendiente de confirmar debido a los posibles reingresos a la lista de espera.
 
 ### ASISTENCIA
 
-PK asistencia_id
-
 FK participante_id -> PARTICIPANTE.participante_id
+FK sesion_evento_id -> SESION_EVENTO.sesion_evento_id
 
-NN fecha_registro  
+NN fecha_registro
 NN estado
 
-La relación de asistencia con EVENTO o SESION_EVENTO queda pendiente de
-definición física porque RN-06 permite registrar asistencia por sesión o por
-evento según configuración.
+UQ (participante_id, sesion_evento_id)
+
+La asistencia se registra por sesión. Cada registro de asistencia corresponde
+a un participante y a una sesión específica.
 
 ## 3. Conceptos adicionales del modelo mínimo
 
@@ -233,7 +233,17 @@ Un participante puede tener cero o varias asistencias.
 
 Cada asistencia corresponde a un único participante.
 
-La relación de ASISTENCIA con EVENTO o SESION_EVENTO queda pendiente.
+La FK `asistencia.participante_id` referencia al participante.
+
+### SesionEvento — Asistencia
+
+SESION_EVENTO 1 ---- N ASISTENCIA
+
+Una sesión puede tener cero o varias asistencias.
+
+Cada asistencia corresponde a una única sesión.
+
+La FK `asistencia.sesion_evento_id` referencia a la sesión correspondiente.
 
 ### Evento — Comunicacion
 
@@ -293,11 +303,22 @@ Cada feedback corresponde a un evento.
 
 ### D-LOG-01 — Registro de asistencia
 
-Debe definirse cómo representar físicamente la alternativa de RN-06:
+Se decidió registrar la asistencia por `SesionEvento`.
 
-- asistencia por evento;
-- asistencia por sesión;
-- o una estructura que soporte ambas.
+La tabla `ASISTENCIA` referencia mediante FK a `SESION_EVENTO`.
+
+Esto permite registrar específicamente a qué sesión asistió cada participante.
+
+La relación queda:
+
+PARTICIPANTE 1:N ASISTENCIA N:1 SESION_EVENTO
+
+Además, se establece como candidata a restricción:
+
+`UNIQUE(participante_id, sesion_evento_id)`
+
+para impedir que un participante tenga más de un registro de asistencia para
+la misma sesión.
 
 ### D-LOG-02 — Reingreso a lista de espera
 

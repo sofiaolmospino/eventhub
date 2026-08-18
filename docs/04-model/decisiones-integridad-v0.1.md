@@ -13,22 +13,22 @@ mediante restricciones de base de datos.
 
 ## 2. Decisiones de integridad
 
-| RN/RF | Regla | Protección prevista | Justificación |
-|---|---|---|---|
-| RN-01 | Un evento debe tener responsable, modalidad, fechas, capacidad y estado. | NN | Los datos son necesarios para considerar válido un evento. |
-| RN-02 | El estado del evento debe pertenecer al conjunto oficial. | CHECK/backend | El estado sólo puede ser BORRADOR, PUBLICADO, EN_CURSO, FINALIZADO o CANCELADO. |
-| RN-03 | La inscripción debe respetar el cupo. | Backend + validación de datos | Requiere comparar las inscripciones existentes con la capacidad del evento. |
-| RN-03 | Si se llena el cupo puede utilizarse lista de espera. | Backend + FK | La relación se representa mediante LISTA_ESPERA y la decisión de promoción requiere lógica de negocio. |
-| RN-04 | No puede existir inscripción duplicada por participante/evento. | UQ | `UNIQUE(participante_id, evento_id)` evita duplicados estructurales. |
-| RN-05 | La promoción desde lista de espera debe ser ordenada y trazable. | Backend + datos de posición/fecha | El orden y la promoción dependen del estado y de varias filas. |
-| RN-06 | La asistencia se registra por sesión o evento según configuración. | Backend + FK pendiente | La estructura física todavía debe resolver la alternativa entre evento y sesión. |
-| RN-07 | El certificado sólo se habilita al cumplir el porcentaje mínimo de asistencia. | Backend + CHECK para rango | La condición depende de la asistencia; el porcentaje debe estar entre 0 y 100. |
-| RF-03 | Validar datos obligatorios en cliente y servidor. | NN + backend | La base de datos protege obligatoriedad estructural y backend realiza validaciones de negocio. |
-| RF-04 | Registrar fecha y usuario en operaciones que cambian estados. | Auditoría/backend | La trazabilidad depende del contexto de la operación y no sólo de una FK. |
-| RF-17 | Evitar inscripciones duplicadas. | UQ | La combinación participante/evento identifica una inscripción única. |
-| RF-18 | Registrar asistencia. | FK + backend | La asistencia debe referenciar participantes válidos y respetar RN-06. |
-| RF-19 | Promover lista de espera. | Backend | La promoción requiere determinar orden, disponibilidad y cambio de estado. |
-| RF-20 | Habilitar certificado sólo cuando se cumple el criterio. | Backend | La condición depende del porcentaje de asistencia registrado. |
+| RN/RF | Regla                                                                          | Protección prevista               | Justificación |
+|---|--------------------------------------------------------------------------------|-----------------------------------|---|
+| RN-01 | Un evento debe tener responsable, modalidad, fechas, capacidad y estado.       | NN                                | Los datos son necesarios para considerar válido un evento. |
+| RN-02 | El estado del evento debe pertenecer al conjunto oficial.                      | CHECK/backend                     | El estado sólo puede ser BORRADOR, PUBLICADO, EN_CURSO, FINALIZADO o CANCELADO. |
+| RN-03 | La inscripción debe respetar el cupo.                                          | Backend + validación de datos     | Requiere comparar las inscripciones existentes con la capacidad del evento. |
+| RN-03 | Si se llena el cupo puede utilizarse lista de espera.                          | Backend + FK                      | La relación se representa mediante LISTA_ESPERA y la decisión de promoción requiere lógica de negocio. |
+| RN-04 | No puede existir inscripción duplicada por participante/evento.                | UQ                                | `UNIQUE(participante_id, evento_id)` evita duplicados estructurales. |
+| RN-05 | La promoción desde lista de espera debe ser ordenada y trazable.               | Backend + datos de posición/fecha | El orden y la promoción dependen del estado y de varias filas. |
+| RN-06 | La asistencia se registra por sesión de evento.                                | FK + UQ                           | ASISTENCIA referencia a SESION_EVENTO y se evita duplicar la asistencia del mismo participante para una sesión. |
+| RN-07 | El certificado sólo se habilita al cumplir el porcentaje mínimo de asistencia. | Backend + CHECK para rango        | La condición depende de la asistencia; el porcentaje debe estar entre 0 y 100. |
+| RF-03 | Validar datos obligatorios en cliente y servidor.                              | NN + backend                      | La base de datos protege obligatoriedad estructural y backend realiza validaciones de negocio. |
+| RF-04 | Registrar fecha y usuario en operaciones que cambian estados.                  | Auditoría/backend                 | La trazabilidad depende del contexto de la operación y no sólo de una FK. |
+| RF-17 | Evitar inscripciones duplicadas.                                               | UQ                                | La combinación participante/evento identifica una inscripción única. |
+| RF-18 | Registrar asistencia.                                                          | FK + backend                      | La asistencia debe referenciar participantes válidos y respetar RN-06. |
+| RF-19 | Promover lista de espera.                                                      | Backend                           | La promoción requiere determinar orden, disponibilidad y cambio de estado. |
+| RF-20 | Habilitar certificado sólo cuando se cumple el criterio.                       | Backend                           | La condición depende del porcentaje de asistencia registrado. |
 
 ## 3. Constraints estructurales
 
@@ -59,26 +59,23 @@ Las relaciones 1:N se protegerán mediante FK:
 - LISTA_ESPERA.participante_id -> PARTICIPANTE.participante_id
 - LISTA_ESPERA.evento_id -> EVENTO.evento_id
 - ASISTENCIA.participante_id -> PARTICIPANTE.participante_id
+- ASISTENCIA.sesion_evento_id -> SESION_EVENTO.sesion_evento_id
 - COMUNICACION.evento_id -> EVENTO.evento_id
 - CERTIFICADO.participante_id -> PARTICIPANTE.participante_id
 - CERTIFICADO.evento_id -> EVENTO.evento_id
 - FEEDBACK.participante_id -> PARTICIPANTE.participante_id
 - FEEDBACK.evento_id -> EVENTO.evento_id
 
-La relación definitiva de ASISTENCIA con EVENTO/SESION_EVENTO queda pendiente
-por RN-06.
 
 ### UNIQUE
 
-Se define como restricción principal:
+### Confirmadas
 
-`UNIQUE(participante_id, evento_id)` en INSCRIPCION.
+- INSCRIPCION(participante_id, evento_id)
+- ASISTENCIA(participante_id, sesion_evento_id)
 
-Esta restricción protege RN-04.
+### Candidatas pendientes
 
-Quedan como candidatas pendientes:
-
-- PARTICIPANTE.correo
 - LISTA_ESPERA(participante_id, evento_id)
 - CERTIFICADO(participante_id, evento_id)
 - FEEDBACK(participante_id, evento_id)
@@ -152,8 +149,12 @@ La promoción depende de disponibilidad y del orden de los participantes.
 
 ### RN-06 — Registro de asistencia
 
-La forma de registrar asistencia depende de si la configuración trabaja por
-evento o por sesión.
+La asistencia se registra por sesión de evento.
+
+ASISTENCIA referencia a SESION_EVENTO mediante `sesion_evento_id`.
+
+Además, `UNIQUE(participante_id, sesion_evento_id)` evita registrar dos veces
+la asistencia del mismo participante para una misma sesión.
 
 ### RN-07 — Habilitación del certificado
 

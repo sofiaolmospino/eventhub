@@ -22,10 +22,29 @@ El flujo corresponde al definido en la ficha oficial del proyecto.
 - Las PK propuestas inicialmente serán identificadores técnicos estables.
 - No se definen todavía tipos físicos de PostgreSQL.
 - No se define todavía DDL ni CREATE TABLE.
-- Las decisiones que no estén cerradas por la ficha oficial se documentan
-  como pendientes en lugar de asumirlas silenciosamente.
+- Las decisiones que no estén cerradas por la ficha oficial o por el grupo
+  se documentan como pendientes en lugar de asumirlas silenciosamente.
 
 ## 3. Tablas candidatas núcleo
+
+### usuario
+
+Propósito: representa la identidad que utiliza el sistema y permite
+registrar quién realiza operaciones relevantes que requieren trazabilidad.
+
+Atributos iniciales:
+
+- `usuario_id` [PK]
+- `nombre`
+- `apellido`
+- `correo`
+- `rol`
+
+Reglas y requisitos relacionados:
+
+- RF-04
+
+---
 
 ### evento
 
@@ -42,6 +61,7 @@ Atributos iniciales:
 - `fecha_fin`
 - `capacidad`
 - `estado`
+- `usuario_id` [FK → usuario.usuario_id]
 
 Reglas y requisitos relacionados:
 
@@ -49,6 +69,7 @@ Reglas y requisitos relacionados:
 - RN-02
 - RF-05
 - RF-15
+- RF-04
 
 ---
 
@@ -61,9 +82,8 @@ Atributos iniciales:
 
 - `sesion_evento_id` [PK]
 - `evento_id` [FK → evento.evento_id]
-- `fecha`
-- `hora_inicio`
-- `hora_fin`
+- `fecha_inicio`
+- `fecha_fin`
 
 Reglas y requisitos relacionados:
 
@@ -123,6 +143,11 @@ Reglas y requisitos relacionados:
 - RF-08
 - RF-17
 
+Nota:
+
+El atributo `correo` no se considera UNIQUE. El modelo permite que un mismo
+correo pertenezca a más de un participante.
+
 ---
 
 ### inscripcion
@@ -136,6 +161,7 @@ Atributos iniciales:
 - `evento_id` [FK → evento.evento_id]
 - `fecha_inscripcion`
 - `estado`
+- `usuario_id` [FK → usuario.usuario_id]
 
 Reglas y requisitos relacionados:
 
@@ -144,6 +170,17 @@ Reglas y requisitos relacionados:
 - RF-08
 - RF-16
 - RF-17
+- RF-04
+
+Estados válidos:
+
+- PENDIENTE
+- CONFIRMADA
+- CANCELADA
+
+Restricción:
+
+- `UNIQUE(participante_id, evento_id)`
 
 ---
 
@@ -160,6 +197,7 @@ Atributos iniciales:
 - `fecha_ingreso`
 - `posicion`
 - `estado`
+- `usuario_id` [FK → usuario.usuario_id]
 
 Reglas y requisitos relacionados:
 
@@ -168,32 +206,197 @@ Reglas y requisitos relacionados:
 - RF-09
 - RF-16
 - RF-19
+- RF-04
+
+Estados válidos:
+
+- ACTIVA
+- PROMOVIDA
+- CANCELADA
+
+Restricción:
+
+- `UNIQUE(participante_id, evento_id)`
+
+La restricción evita que un participante vuelva a ingresar a la lista de
+espera del mismo evento después de haber sido promovido, cancelado o retirado.
 
 ---
 
 ### asistencia
 
-Propósito: representa el registro de asistencia de un participante a un
-evento o sesión.
+Propósito: representa el registro de asistencia de un participante a una
+sesión específica de un evento.
 
-Atributos iniciales propuestos:
+Atributos iniciales:
 
 - `asistencia_id` [PK]
 - `participante_id` [FK → participante.participante_id]
+- `sesion_evento_id` [FK → sesion_evento.sesion_evento_id]
 - `fecha_registro`
 - `estado`
-
-La referencia concreta al evento o a la sesión queda como decisión pendiente,
-porque RN-06 establece que la asistencia puede registrarse por sesión o por
-evento según configuración.
+- `usuario_id` [FK → usuario.usuario_id]
 
 Reglas y requisitos relacionados:
 
 - RN-06
 - RF-10
 - RF-18
+- RF-04
+
+Estados válidos:
+
+- PRESENTE
+- AUSENTE
+
+Restricción:
+
+- `UNIQUE(participante_id, sesion_evento_id)`
+
+La asistencia se registra por sesión de evento.
+
+---
+
+### certificado
+
+Propósito: representa el certificado académico simple habilitado para un
+participante que cumple el criterio de asistencia.
+
+Atributos iniciales:
+
+- `certificado_id` [PK]
+- `participante_id` [FK → participante.participante_id]
+- `evento_id` [FK → evento.evento_id]
+- `fecha_emision`
+- `porcentaje_asistencia`
+- `estado`
+- `usuario_id` [FK → usuario.usuario_id]
+
+Reglas y requisitos relacionados:
+
+- RN-07
+- RF-12
+- RF-04
+
+Estados válidos:
+
+- HABILITADO
+- EMITIDO
+- ANULADO
+
+Restricción:
+
+- `UNIQUE(participante_id, evento_id)`
+
+Un participante puede tener como máximo un certificado por evento.
+
+---
+
+### comunicacion
+
+Propósito: representa una comunicación relacionada con un evento.
+
+Atributos iniciales:
+
+- `comunicacion_id` [PK]
+- `evento_id` [FK → evento.evento_id]
+- `asunto`
+- `contenido`
+- `fecha_envio`
+- `estado`
+
+Reglas y requisitos relacionados:
+
+- RF-11
+
+La definición de destinatarios individuales queda pendiente para una etapa
+posterior.
+
+---
+
+### feedback
+
+Propósito: representa la valoración o comentario de un participante sobre
+un evento.
+
+Atributos iniciales:
+
+- `feedback_id` [PK]
+- `participante_id` [FK → participante.participante_id]
+- `evento_id` [FK → evento.evento_id]
+- `valoracion`
+- `comentario`
+- `fecha`
+
+Reglas y requisitos relacionados:
+
+- RF-13
+
+Restricción:
+
+- `UNIQUE(participante_id, evento_id)`
+
+Un participante puede registrar como máximo un feedback para un evento.
+
+---
 
 ## 4. Relaciones
+
+### Usuario — Evento
+
+**Usuario 1:N Evento**
+
+Un usuario puede realizar cambios relevantes en varios eventos.
+
+Cada evento referencia al usuario responsable del último cambio relevante
+mediante `evento.usuario_id`.
+
+---
+
+### Usuario — Inscripcion
+
+**Usuario 1:N Inscripcion**
+
+Un usuario puede realizar cambios relevantes en varias inscripciones.
+
+Cada inscripción referencia al usuario que realizó el último cambio relevante
+mediante `inscripcion.usuario_id`.
+
+---
+
+### Usuario — ListaEspera
+
+**Usuario 1:N ListaEspera**
+
+Un usuario puede realizar cambios relevantes en varios registros de lista
+de espera.
+
+Cada registro referencia al usuario que realizó el último cambio relevante
+mediante `lista_espera.usuario_id`.
+
+---
+
+### Usuario — Asistencia
+
+**Usuario 1:N Asistencia**
+
+Un usuario puede registrar o modificar varias asistencias.
+
+Cada asistencia referencia al usuario que realizó el último cambio relevante
+mediante `asistencia.usuario_id`.
+
+---
+
+### Usuario — Certificado
+
+**Usuario 1:N Certificado**
+
+Un usuario puede realizar cambios relevantes en varios certificados.
+
+Cada certificado referencia al usuario que realizó el último cambio relevante
+mediante `certificado.usuario_id`.
+
+---
 
 ### Evento — SesionEvento
 
@@ -318,8 +521,72 @@ Justificación:
 - RF-10
 - RF-18
 
-La relación de asistencia con `evento` o `sesion_evento` queda pendiente
-de definición debido a RN-06.
+---
+
+### SesionEvento — Asistencia
+
+**SesionEvento 1:N Asistencia**
+
+Una sesión puede tener cero o varias asistencias.
+
+Cada registro de asistencia corresponde a una única sesión.
+
+La FK `asistencia.sesion_evento_id` se ubica en el lado N.
+
+Justificación:
+
+- RN-06
+- RF-10
+- RF-18
+
+La asistencia se registra específicamente por sesión de evento.
+
+---
+
+### Participante — Certificado
+
+**Participante 1:N Certificado**
+
+Un participante puede tener cero o varios certificados correspondientes a
+diferentes eventos.
+
+Cada certificado corresponde a un único participante.
+
+---
+
+### Evento — Certificado
+
+**Evento 1:N Certificado**
+
+Un evento puede generar cero o varios certificados.
+
+Cada certificado corresponde a un único evento.
+
+La combinación participante/evento es única.
+
+---
+
+### Participante — Feedback
+
+**Participante 1:N Feedback**
+
+Un participante puede registrar feedback para diferentes eventos.
+
+Cada feedback corresponde a un único participante.
+
+---
+
+### Evento — Feedback
+
+**Evento 1:N Feedback**
+
+Un evento puede recibir cero o varios feedbacks.
+
+Cada feedback corresponde a un único evento.
+
+La combinación participante/evento es única.
+
+---
 
 ## 5. Relaciones N:M
 
@@ -350,37 +617,70 @@ Queda:
 La resolución permite representar además las reglas relacionadas con cupos,
 inscripciones y duplicados.
 
-## 6. Claves naturales / UNIQUE candidatas
+---
+
+## 6. Claves naturales / UNIQUE
 
 ### Inscripcion
 
-Candidata:
+Restricción definitiva:
 
-`(participante_id, evento_id)`
-
-Justificación:
+`UNIQUE(participante_id, evento_id)`
 
 RN-04 establece que no puede existir una inscripción duplicada para el mismo
 participante y evento.
 
-Por lo tanto, la combinación de ambos identificadores debe ser única.
+---
 
 ### Participante
 
-El `correo` puede ser una candidata a UNIQUE, pero su unicidad definitiva
-queda pendiente de confirmar como regla explícita del dominio.
+El `correo` NO es UNIQUE.
 
-No se agrega una restricción definitiva solamente porque parezca conveniente.
+El modelo permite que un mismo correo pertenezca a más de un participante.
+
+---
 
 ### ListaEspera
 
-La combinación:
+Restricción definitiva:
 
-`(participante_id, evento_id)`
+`UNIQUE(participante_id, evento_id)`
 
-se considera candidata a UNIQUE, pero queda pendiente de confirmar qué ocurre
-si un participante vuelve a entrar en lista de espera después de ser promovido
-o cancelar su participación.
+Un participante no puede volver a ingresar a la lista de espera del mismo
+evento.
+
+---
+
+### Asistencia
+
+Restricción definitiva:
+
+`UNIQUE(participante_id, sesion_evento_id)`
+
+Un participante no puede tener más de un registro de asistencia para la misma
+sesión.
+
+---
+
+### Certificado
+
+Restricción definitiva:
+
+`UNIQUE(participante_id, evento_id)`
+
+Un participante puede tener como máximo un certificado por evento.
+
+---
+
+### Feedback
+
+Restricción definitiva:
+
+`UNIQUE(participante_id, evento_id)`
+
+Un participante puede registrar como máximo un feedback por evento.
+
+---
 
 ## 7. Optionalidad
 
@@ -420,6 +720,30 @@ Cada registro de lista de espera corresponde a un participante.
 
 Cada registro de lista de espera corresponde a un evento.
 
+### `asistencia.participante_id`
+
+**Obligatoria.**
+
+Cada asistencia corresponde a un participante.
+
+### `asistencia.sesion_evento_id`
+
+**Obligatoria.**
+
+Cada asistencia corresponde a una sesión específica.
+
+### `certificado.participante_id`
+
+**Obligatoria.**
+
+Cada certificado corresponde a un participante.
+
+### `certificado.evento_id`
+
+**Obligatoria.**
+
+Cada certificado corresponde a un evento.
+
 ### Evento → SesionEvento
 
 **Opcional en el lado Evento.**
@@ -448,68 +772,73 @@ Un evento puede estar publicado sin tener todavía participantes inscritos.
 
 **Opcional en el lado Participante.**
 
-Un participante puede existir sin haber asistido todavía a un evento.
+Un participante puede existir sin haber asistido todavía a una sesión.
+
+### SesionEvento → Asistencia
+
+**Opcional en el lado SesionEvento.**
+
+Una sesión puede existir antes de registrar asistencias.
+
+### Participante → Certificado
+
+**Opcional en el lado Participante.**
+
+Un participante puede no tener certificados.
+
+### Evento → Certificado
+
+**Opcional en el lado Evento.**
+
+Un evento puede no generar certificados.
+
+---
 
 ## 8. Reglas iniciales de integridad
 
 - Un evento debe tener responsable, modalidad, fechas, capacidad y estado.
 - Los estados válidos de un evento son:
-    - BORRADOR
-    - PUBLICADO
-    - EN_CURSO
-    - FINALIZADO
-    - CANCELADO
+  - BORRADOR
+  - PUBLICADO
+  - EN_CURSO
+  - FINALIZADO
+  - CANCELADO
 - La inscripción debe respetar el cupo disponible.
 - Si el cupo está lleno y la lista de espera está habilitada, el participante
   puede pasar a la lista de espera.
 - No puede existir una inscripción duplicada para el mismo participante y
   evento.
 - La promoción desde lista de espera debe ser ordenada y trazable.
-- La asistencia se registra por sesión o evento según configuración.
-- El certificado académico simple sólo se habilita cuando se cumple el
-  porcentaje mínimo de asistencia.
-- Las operaciones relevantes que cambian estados deben conservar trazabilidad
-  según las reglas definidas para el proyecto.
+- Un participante no puede volver a ingresar a la lista de espera del mismo
+  evento.
+- La asistencia se registra por sesión de evento.
+- Un participante no puede tener dos registros de asistencia para la misma
+  sesión.
+- El certificado sólo se habilita cuando se cumple el porcentaje mínimo de
+  asistencia.
+- Un participante puede tener como máximo un certificado por evento.
+- Un participante puede registrar como máximo un feedback por evento.
+- Las operaciones relevantes que cambian estados deben conservar fecha y
+  usuario según RF-04.
 
-## 9. Decisiones pendientes
+---
 
-### D-REL-01 — Registro de asistencia
+## 9. Auditoría
 
-RN-06 indica que la asistencia puede registrarse por sesión o por evento
-según configuración.
+Para las operaciones relevantes que cambian estados se utiliza:
 
-Todavía debe definirse si el modelo físico utilizará:
+- `created_at`
+- `updated_at`
+- `usuario_id`
 
-- una FK hacia `evento`;
-- una FK hacia `sesion_evento`;
-- o una estructura que permita representar ambos escenarios.
+`usuario_id` referencia a `usuario.usuario_id` y permite identificar al
+usuario que realizó el último cambio relevante.
 
-No se fija todavía una solución física definitiva.
+La auditoría completa de cada transición histórica podrá ampliarse
+posteriormente si el proyecto requiere conservar un historial de múltiples
+cambios.
 
-### D-REL-02 — Unicidad de lista de espera
-
-Debe confirmarse si un participante puede volver a ingresar a la lista de
-espera del mismo evento después de haber sido promovido, cancelado o retirado.
-
-Hasta cerrar esta regla, `(participante_id, evento_id)` se mantiene como
-candidata a UNIQUE y no como restricción definitiva.
-
-### D-REL-03 — Certificado
-
-`Certificado` forma parte del modelo mínimo esperado y del flujo crítico, pero
-no se incluye dentro de las ocho tablas núcleo seleccionadas para este primer
-ejercicio.
-
-Se incorporará en la consolidación posterior del modelo relacional.
-
-### D-REL-04 — Comunicacion y Feedback
-
-`Comunicacion` y `Feedback` forman parte del alcance oficial, pero se dejan
-fuera del núcleo inicial de ocho tablas porque no son necesarios para explicar
-el recorrido principal de publicación, inscripción, cupo/lista de espera y
-asistencia.
-
-Se revisarán al completar el modelo relacional.
+---
 
 ## 10. Revisión de normalización básica
 

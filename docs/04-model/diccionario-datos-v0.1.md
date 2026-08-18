@@ -93,15 +93,20 @@ la posibilidad de reingreso.
 
 ## 9. ASISTENCIA
 
-| Campo           | Significado                              | Obligatorio | PK/FK/UQ | Dominio/regla                    | Origen       |
-|-----------------|------------------------------------------|-------------|----------|----------------------------------|--------------|
-| asistencia_id   | Identificador de la asistencia           | Sí          | PK       | Identificador único              | RF-10        |
-| participante_id | Participante cuya asistencia se registra | Sí          | FK, NN   | Debe existir                     | RF-10, RF-18 |
-| fecha_registro  | Fecha del registro de asistencia         | Sí          | NN       | Fecha válida                     | RF-18        |
-| estado          | Situación del registro de asistencia     | Sí          | NN       | Valores definidos por el dominio | RN-06        |
+| Campo | Significado | Obligatorio | PK/FK/UQ | Dominio/regla | Origen |
+|---|---|---|---|---|---|
+| asistencia_id | Identificador de la asistencia | Sí | PK | Identificador único | RF-10 |
+| participante_id | Participante cuya asistencia se registra | Sí | FK, NN | Debe existir | RF-10, RF-18 |
+| sesion_evento_id | Sesión a la que corresponde la asistencia | Sí | FK, NN | Debe existir | RN-06, RF-10 |
+| fecha_registro | Fecha del registro de asistencia | Sí | NN | Fecha válida | RF-18 |
+| estado | Situación del registro de asistencia | Sí | NN | Valores definidos por el dominio | RF-10 |
 
-La referencia hacia EVENTO o SESION_EVENTO queda pendiente de resolución por
-RN-06.
+### Restricción compuesta
+
+`UQ(participante_id, sesion_evento_id)`
+
+La combinación evita registrar dos veces la asistencia del mismo participante
+para una misma sesión.
 
 ## 10. COMUNICACION
 
