@@ -13,6 +13,21 @@ public class ListaEspera {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public ListaEspera() {
+    }
+
+    public ListaEspera(Long listaEsperaId, Long participanteId, Long eventoId, OffsetDateTime fechaIngreso, Integer posicion, String estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.listaEsperaId = listaEsperaId;
+        this.participanteId = participanteId;
+        this.eventoId = eventoId;
+        this.fechaIngreso = fechaIngreso;
+        this.posicion = posicion;
+        this.estado = estado;
+        this.usuarioId = usuarioId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getListaEsperaId() {
         return listaEsperaId;
     }

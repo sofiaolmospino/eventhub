@@ -12,6 +12,20 @@ public class Inscripcion {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Inscripcion() {
+    }
+
+    public Inscripcion(Long inscripcionId, Long participanteId, Long eventoId, OffsetDateTime fechaInscripcion, String estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.inscripcionId = inscripcionId;
+        this.participanteId = participanteId;
+        this.eventoId = eventoId;
+        this.fechaInscripcion = fechaInscripcion;
+        this.estado = estado;
+        this.usuarioId = usuarioId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getInscripcionId() {
         return inscripcionId;
     }

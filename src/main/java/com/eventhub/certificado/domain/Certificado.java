@@ -14,6 +14,21 @@ public class Certificado {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Certificado() {
+    }
+
+    public Certificado(Long certificadoId, Long participanteId, Long eventoId, OffsetDateTime fechaEmision, BigDecimal porcentajeAsistencia, String estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.certificadoId = certificadoId;
+        this.participanteId = participanteId;
+        this.eventoId = eventoId;
+        this.fechaEmision = fechaEmision;
+        this.porcentajeAsistencia = porcentajeAsistencia;
+        this.estado = estado;
+        this.usuarioId = usuarioId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getCertificadoId() {
         return certificadoId;
     }

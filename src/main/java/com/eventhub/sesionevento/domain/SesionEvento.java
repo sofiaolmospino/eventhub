@@ -10,6 +10,18 @@ public class SesionEvento {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public SesionEvento() {
+    }
+
+    public SesionEvento(Long sesionEventoId, Long eventoId, OffsetDateTime fechaInicio, OffsetDateTime fechaFin, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.sesionEventoId = sesionEventoId;
+        this.eventoId = eventoId;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getSesionEventoId() {
         return sesionEventoId;
     }

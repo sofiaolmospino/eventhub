@@ -12,6 +12,20 @@ public class Asistencia {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Asistencia() {
+    }
+
+    public Asistencia(Long asistenciaId, Long participanteId, Long sesionEventoId, OffsetDateTime fechaRegistro, String estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.asistenciaId = asistenciaId;
+        this.participanteId = participanteId;
+        this.sesionEventoId = sesionEventoId;
+        this.fechaRegistro = fechaRegistro;
+        this.estado = estado;
+        this.usuarioId = usuarioId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getAsistenciaId() {
         return asistenciaId;
     }

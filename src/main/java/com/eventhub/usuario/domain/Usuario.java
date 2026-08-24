@@ -11,6 +11,19 @@ public class Usuario {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Usuario() {
+    }
+
+    public Usuario(Long usuarioId, String nombre, String apellido, String correo, String rol, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.usuarioId = usuarioId;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.correo = correo;
+        this.rol = rol;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getUsuarioId() {
         return usuarioId;
     }

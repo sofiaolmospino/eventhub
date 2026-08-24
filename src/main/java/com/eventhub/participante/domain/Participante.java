@@ -10,6 +10,18 @@ public class Participante {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Participante() {
+    }
+
+    public Participante(Long participanteId, String nombre, String apellido, String correo, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.participanteId = participanteId;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.correo = correo;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getParticipanteId() {
         return participanteId;
     }

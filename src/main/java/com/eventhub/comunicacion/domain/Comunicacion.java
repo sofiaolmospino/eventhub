@@ -13,6 +13,21 @@ public class Comunicacion {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Comunicacion() {
+    }
+
+    public Comunicacion(Long comunicacionId, Long usuarioId, String tipo, String asunto, String contenido, OffsetDateTime fechaEnvio, String estado, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.comunicacionId = comunicacionId;
+        this.usuarioId = usuarioId;
+        this.tipo = tipo;
+        this.asunto = asunto;
+        this.contenido = contenido;
+        this.fechaEnvio = fechaEnvio;
+        this.estado = estado;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getComunicacionId() {
         return comunicacionId;
     }

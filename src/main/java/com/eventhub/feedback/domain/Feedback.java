@@ -12,6 +12,20 @@ public class Feedback {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Feedback() {
+    }
+
+    public Feedback(Long feedbackId, Long participanteId, Long eventoId, Integer valoracion, String comentario, OffsetDateTime fecha, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.feedbackId = feedbackId;
+        this.participanteId = participanteId;
+        this.eventoId = eventoId;
+        this.valoracion = valoracion;
+        this.comentario = comentario;
+        this.fecha = fecha;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getFeedbackId() {
         return feedbackId;
     }

@@ -9,6 +9,17 @@ public class Sede {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Sede() {
+    }
+
+    public Sede(Long sedeId, String nombre, String direccion, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.sedeId = sedeId;
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getSedeId() {
         return sedeId;
     }

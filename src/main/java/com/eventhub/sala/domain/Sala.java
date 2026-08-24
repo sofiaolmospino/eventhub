@@ -10,6 +10,18 @@ public class Sala {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    public Sala() {
+    }
+
+    public Sala(Long salaId, Long sedeId, String nombre, Integer capacidad, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.salaId = salaId;
+        this.sedeId = sedeId;
+        this.nombre = nombre;
+        this.capacidad = capacidad;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getSalaId() {
         return salaId;
     }
