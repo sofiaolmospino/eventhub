@@ -16,7 +16,7 @@ public class Evento {
     private OffsetDateTime fechaInicio;
     private OffsetDateTime fechaFin;
     private Integer capacidad;
-    private String estado;
+    private EstadoEvento estado;
     private Long usuarioId;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
@@ -25,7 +25,7 @@ public class Evento {
     public Evento() {
     }
 
-    public Evento(Long eventoId, String nombre, String descripcion, String responsable, String modalidad, OffsetDateTime fechaInicio, OffsetDateTime fechaFin, Integer capacidad, String estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    public Evento(Long eventoId, String nombre, String descripcion, String responsable, String modalidad, OffsetDateTime fechaInicio, OffsetDateTime fechaFin, Integer capacidad, EstadoEvento estado, Long usuarioId, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.eventoId = eventoId;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -104,11 +104,11 @@ public class Evento {
         this.capacidad = capacidad;
     }
 
-    public String getEstado() {
+    public EstadoEvento getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoEvento estado) {
         this.estado = estado;
     }
 

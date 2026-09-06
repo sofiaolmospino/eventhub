@@ -90,3 +90,4 @@ public class Asistencia {
         this.updatedAt = updatedAt;
     }
 }
+
